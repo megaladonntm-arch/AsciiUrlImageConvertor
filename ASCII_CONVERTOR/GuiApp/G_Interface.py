@@ -1,73 +1,70 @@
-
-
-
-
 import tkinter as tk
-from tkinter import filedialog, messagebox
-from PIL import Image
+from tkinter import messagebox
 
-ASCII_CHARS = "@%#*+=-:. "
-class ASCIIArtApp:
-    def __init__(self, root):
-        self.root = root
-        self.root.title("ASCII Art Generator")
-        self.root.geometry("900x700")
+from tkinterdnd2 import TkinterDnD, DND_FILES
+from M_Alghoritms import image_to_ascii
 
-        self.text = tk.Text(root, wrap="none", font=("Courier New", 6))
-        self.text.pack(fill=tk.BOTH, expand=True)
 
-        menu = tk.Menu(root)
-        root.config(menu=menu)
 
-        file_menu = tk.Menu(menu, tearoff=0)
-        menu.add_cascade(label="File", menu=file_menu)
-        file_menu.add_command(label="Open Image", command=self.open_image)
-        file_menu.add_command(label="Save ASCII", command=self.save_ascii)
-        file_menu.add_separator()
-        file_menu.add_command(label="Exit", command=root.quit)
 
-    def open_image(self):
-        path = filedialog.askopenfilename(
-            filetypes=[("Images", "*.png *.jpg *.jpeg")]
+BG_COLOR = "#0b0b0b"
+FG_COLOR = "#d0d0d0"
+ACCENT_COLOR = "#1e1e1e"
+
+class ASCIIArtApp(TkinterDnD.Tk):
+    def __init__(self):
+        super().__init__()
+
+        self.title("ASCII IMAGE RENDERER")
+        self.geometry("1000x720")
+        self.configure(bg=BG_COLOR)
+
+        self.header = tk.Label(
+            self,
+            text="DROP IMAGE HERE",
+            bg=BG_COLOR,
+            fg="#555555",
+            font=("Consolas", 14)
         )
-        if not path:
+        self.header.pack(pady=8)
+
+        self.text = tk.Text(
+            self,
+            bg=ACCENT_COLOR,
+            fg=FG_COLOR,
+            insertbackground=FG_COLOR,
+            wrap="none",
+            font=("Consolas", 6),
+            bd=0,
+            padx=10,
+            pady=10
+        )
+        self.text.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+
+        self.text.configure(state=tk.DISABLED)
+
+        self.drop_target_register(DND_FILES)
+        self.dnd_bind("<<Drop>>", self.drop)
+
+    def drop(self, event):
+        path = event.data.strip("{}")
+
+        if not path.lower().endswith((".png", ".jpg", ".jpeg")):
+            messagebox.showerror("ERROR", "ONLY IMAGE FILES")
             return
 
         try:
             ascii_art = self.image_to_ascii(path)
+            self.text.configure(state=tk.NORMAL)
             self.text.delete("1.0", tk.END)
             self.text.insert(tk.END, ascii_art)
+            self.text.configure(state=tk.DISABLED)
+            self.header.config(text="RENDER COMPLETE", fg="#888888")
         except Exception as e:
-            messagebox.showerror("Error", str(e))
+            messagebox.showerror("ERROR", str(e))
+        
 
-    def save_ascii(self):
-        ascii_text = self.text.get("1.0", tk.END)
-        if not ascii_text.strip():
-            messagebox.showwarning("Warning", "Nothing to save")
-            return
+    def image_to_ascii(self, image_path, width=180):
+        return image_to_ascii(self, image_path, width)
 
-        path = filedialog.asksaveasfilename(
-            defaultextension=".txt",
-            filetypes=[("Text file", "*.txt")]
-        )
-        if path:
-            with open(path, "w", encoding="utf-8") as f:
-                f.write(ascii_text)
-
-    def image_to_ascii(self, image_path, width=150):
-        image = Image.open(image_path).convert("L")
-
-        aspect_ratio = image.height / image.width
-        height = int(width * aspect_ratio * 0.55)
-
-        image = image.resize((width, height))
-
-        pixels = image.getdata()
-        ascii_str = ""
-
-        for i, pixel in enumerate(pixels):
-            ascii_str += ASCII_CHARS[pixel * len(ASCII_CHARS) // 256]
-            if (i + 1) % width == 0:
-                ascii_str += "\n"
-
-        return ascii_str
+    
