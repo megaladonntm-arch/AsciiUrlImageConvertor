@@ -2,7 +2,7 @@ import numpy as np
 import sys, os, math, random
 from PIL import Image
 
-first_scale = "$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/\|()1{}[]?-_+~<>i!lI;:,^`'. "
+first_scale = "$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/()1{}[]?-_+~<>i!lI;:,^`'. "
 second_scale = "@%#*+=-:. "
 
 def getAverageLuminance(image):
